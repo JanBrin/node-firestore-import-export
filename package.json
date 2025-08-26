@@ -26,8 +26,7 @@
     "watch": "tsc -w",
     "clean": "node ./src/bin/clean.js",
     "tests": "mocha -r ts-node/register tests/**/*.spec.ts",
-    "snyk-protect": "snyk protect",
-    "prepare": "npm run build && npm run snyk-protect"
+    "prepare": "npm run build"
   },
   "bin": {
     "firestore-clear": "./dist/bin/firestore-clear.js",
@@ -58,9 +57,7 @@
     "del": "^5.0.0",
     "firebase-mock": "^2.2.10",
     "mocha": "^7.0.1",
-    "snyk": "^1.189.0",
     "ts-node": "^8.0.2",
     "typescript": "^3.1.6"
-  },
-  "snyk": true
+  }
 }
