@@ -1,12 +1,13 @@
 import 'mocha';
 import firebaseExport from '../src/lib/export';
 import {expect} from 'chai';
+import * as admin from "firebase-admin";
 
 const firebasemock: any = require('firebase-mock');
 const DocumentReference: any = require('firebase-mock/src/firestore-document');
 const sampleRootData = require('./sampleRootData.json');
 
-const getCollections = function (this: any): Promise<FirebaseFirestore.CollectionReference[]> {
+const getCollections = function (this: any): Promise<admin.firestore.CollectionReference[]> {
   const self = this;
   return new Promise((resolve, reject) => {
     let collections: Array<any>;

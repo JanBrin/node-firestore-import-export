@@ -9,8 +9,9 @@ import {
   safelyGetCollectionsSnapshot,
   sleep,
 } from '../src/lib/firestore-helpers';
-import DocumentReference = FirebaseFirestore.DocumentReference;
-import CollectionReference = FirebaseFirestore.CollectionReference;
+import * as admin from 'firebase-admin';
+import DocumentReference = admin.firestore.DocumentReference;
+import CollectionReference = admin.firestore.CollectionReference;
 
 const firebasemock = require('firebase-mock');
 

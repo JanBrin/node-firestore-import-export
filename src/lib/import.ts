@@ -1,6 +1,7 @@
 import {anyFirebaseRef, batchExecutor, isLikeDocument, isRootOfDatabase} from './firestore-helpers';
 import {array_chunks, unserializeSpecialTypes} from './helpers';
 import {ICollection} from '../interfaces/ICollection';
+import * as admin from 'firebase-admin';
 
 const importData = (data: any,
                     startingRef: anyFirebaseRef,
@@ -30,11 +31,11 @@ const importData = (data: any,
       return documentPromise.then(() => batchExecutor(collectionPromises));
     }
   } else {
-    return setDocuments(dataToImport, <FirebaseFirestore.CollectionReference>startingRef, mergeWithExisting, logs);
+    return setDocuments(dataToImport, <admin.firestore.CollectionReference>startingRef, mergeWithExisting, logs);
   }
 };
 
-const setDocuments = (data: ICollection, startingRef: FirebaseFirestore.CollectionReference, mergeWithExisting: boolean = true, logs = false): Promise<any> => {
+const setDocuments = (data: ICollection, startingRef: admin.firestore.CollectionReference, mergeWithExisting: boolean = true, logs = false): Promise<any> => {
   logs && console.log(`Writing documents for ${startingRef.path}`);
   if ('__collections__' in data) {
     throw new Error('Found unexpected "__collection__" in collection data. Does the starting node match' +
