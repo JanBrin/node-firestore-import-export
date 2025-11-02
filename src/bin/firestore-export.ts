@@ -3,6 +3,8 @@ import commander from 'commander';
 import colors from 'colors';
 import process from 'process';
 import fs from 'fs';
+import Stringer from 'stream-json/Stringer';
+import Disassembler from 'stream-json/Disassembler';
 import {firestoreExport} from '../lib';
 import {getCredentialsFromFile, getDBReferenceFromPath, getFirestoreDBReference} from '../lib/firestore-helpers';
 import {accountCredentialsEnvironmentKey, buildOption, commandLineParams as params, packageInfo} from './bin-common';
@@ -46,6 +48,38 @@ const writeResults = (results: string, filename: string): Promise<string> => {
   });
 };
 
+const writeResultsAsJsonStream = (results: any, filename: string): Promise<string> => {
+  return new Promise((resolve, reject) => {
+    const writeStream = fs.createWriteStream(filename);
+    const disassembler = new Disassembler();
+    const stringer = new Stringer();
+
+    // Pipeline: Disassembler -> Stringer -> File
+    disassembler.pipe(stringer).pipe(writeStream);
+
+    writeStream.on('finish', () => {
+      resolve(filename);
+    });
+
+    writeStream.on('error', (err: Error) => {
+      reject(err);
+    });
+
+    disassembler.on('error', (err: Error) => {
+      reject(err);
+    });
+
+    stringer.on('error', (err: Error) => {
+      reject(err);
+    });
+
+    // Write the JavaScript object to the disassembler. It will convert it to
+    // tokens, which Stringer will convert to JSON text.
+    disassembler.write(results);
+    disassembler.end();
+  });
+};
+
 const prettyPrint = Boolean(commander[params.prettyPrint.key]);
 const nodePath = commander[params.nodePath.key];
 
@@ -55,8 +89,12 @@ const nodePath = commander[params.nodePath.key];
   const pathReference = getDBReferenceFromPath(db, nodePath);
   console.log(colors.bold(colors.green('Starting Export 🏋️')));
   const results = await firestoreExport(pathReference, true);
-  const stringResults = JSON.stringify(results, undefined, prettyPrint ? 2 : undefined);
-  await writeResults(stringResults, backupFile);
+  if (prettyPrint) {
+    const stringResults = JSON.stringify(results, undefined, 2);
+    await writeResults(stringResults, backupFile);
+  } else {
+    await writeResultsAsJsonStream(results, backupFile);
+  }
   console.log(colors.yellow(`Results were saved to ${backupFile}`));
   console.log(colors.bold(colors.green('All done 🎉')));
 })().catch((error) => {
