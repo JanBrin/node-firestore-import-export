@@ -7,17 +7,18 @@ import {
 } from './firestore-helpers';
 import * as admin from 'firebase-admin';
 import {serializeSpecialTypes} from './helpers';
+import {DocumentReference, CollectionReference} from 'firebase-admin/firestore';
 
 const exportData = async (startingRef: admin.firestore.Firestore |
-  FirebaseFirestore.DocumentReference |
-  FirebaseFirestore.CollectionReference, logs = false) => {
+  DocumentReference |
+  CollectionReference, logs = false) => {
   if (isLikeDocument(startingRef)) {
     const collectionsPromise = () => getCollections(startingRef, logs);
     let dataPromise: () => Promise<any>;
     if (isRootOfDatabase(startingRef)) {
       dataPromise = () => Promise.resolve({});
     } else {
-      dataPromise = () => (<FirebaseFirestore.DocumentReference>startingRef).get()
+      dataPromise = () => (<DocumentReference>startingRef).get()
         .then(snapshot => snapshot.data())
         .then(data => serializeSpecialTypes(data));
     }
@@ -25,15 +26,15 @@ const exportData = async (startingRef: admin.firestore.Firestore |
       return {'__collections__': res[0], ...res[1]};
     });
   } else {
-    return await getDocuments(<FirebaseFirestore.CollectionReference>startingRef, logs);
+    return await getDocuments(<CollectionReference>startingRef, logs);
   }
 };
 
-const getCollections = async (startingRef: admin.firestore.Firestore | FirebaseFirestore.DocumentReference, logs = false) => {
+const getCollections = async (startingRef: admin.firestore.Firestore | DocumentReference, logs = false) => {
   const collectionNames: Array<string> = [];
   const collectionPromises: Array<() => Promise<any>> = [];
   const collectionsSnapshot = await safelyGetCollectionsSnapshot(startingRef, logs);
-  collectionsSnapshot.map((collectionRef: FirebaseFirestore.CollectionReference) => {
+  collectionsSnapshot.map((collectionRef: CollectionReference) => {
     collectionNames.push(collectionRef.id);
     collectionPromises.push(() => getDocuments(collectionRef, logs));
   });
@@ -45,7 +46,7 @@ const getCollections = async (startingRef: admin.firestore.Firestore | FirebaseF
   return zipped;
 };
 
-const getDocuments = async (collectionRef: FirebaseFirestore.CollectionReference, logs = false) => {
+const getDocuments = async (collectionRef: CollectionReference, logs = false) => {
   logs && console.log(`Retrieving documents from ${collectionRef.path}`);
   const results: any = {};
   const documentPromises: Array<() => Promise<object>> = [];
